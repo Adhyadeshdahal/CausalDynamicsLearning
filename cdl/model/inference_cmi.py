@@ -752,6 +752,10 @@ class InferenceCMI(Inference):
         if self.mask_update_idx == eval_steps:
             self.eval_step_CMI /= eval_steps
 
+            # if not self.cmi_params.memoryless_env:
+            #     eval_step_CMI = torch.eye(feature_dim, feature_dim + 1, dtype=torch.float32, device=self.device)
+            #     eval_step_CMI *= self.CMI_threshold
+
             eval_step_CMI = torch.eye(feature_dim, feature_dim + 1, dtype=torch.float32, device=self.device)
             eval_step_CMI *= self.CMI_threshold
 

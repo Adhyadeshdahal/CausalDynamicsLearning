@@ -41,8 +41,9 @@ def train(params):
     num_env = params.env_params.num_env
     is_vecenv = num_env > 1
     env = get_env(params, render)
-    if isinstance(env, Chemical):
-        torch.save(env.get_save_information(), os.path.join(params.rslts_dir, "chemical_env_params"))
+    if hasattr(env, "get_save_information"):
+        torch.save(env.get_save_information(),
+                os.path.join(params.rslts_dir, "env_graph_info.pt"))
 
     # init model
     update_obs_act_spec(env, params)
@@ -65,7 +66,6 @@ def train(params):
         raise NotImplementedError
     inference = Inference(encoder, params)
 
-    scripted_policy = get_scripted_policy(env, params)
     rl_algo = params.training_params.rl_algo
     is_task_learning = rl_algo == "model_based"
     if rl_algo == "random":
@@ -100,7 +100,6 @@ def train(params):
     # init episode variables
     episode_num = 0
     obs = env.reset()
-    scripted_policy.reset(obs)
 
     done = np.zeros(num_env, dtype=bool) if is_vecenv else False
     success = False
@@ -127,7 +126,6 @@ def train(params):
                     is_demo[i] = get_is_demo(step, params)
                     if rl_algo == "hippo":
                         policy.reset(i)
-                    scripted_policy.reset(obs, i)
 
                     if writer is not None:
                         writer.add_scalar("policy_stat/episode_reward", episode_reward[i], episode_num)
@@ -138,7 +136,6 @@ def train(params):
                 obs = env.reset()
                 if rl_algo == "hippo":
                     policy.reset()
-                scripted_policy.reset(obs)
 
                 if writer is not None:
                     if is_task_learning:
@@ -165,11 +162,8 @@ def train(params):
             else:
                 if is_vecenv:
                     action = policy.act(obs)
-                    if is_demo.any():
-                        demo_action = scripted_policy.act(obs)
-                        action[is_demo] = demo_action[is_demo]
                 else:
-                    action_policy = scripted_policy if is_demo else policy
+                    action_policy =  policy
                     action = action_policy.act(obs)
 
             next_obs, env_reward, done, info = env.step(action)
@@ -205,18 +199,39 @@ def train(params):
             inference.eval()
             if (step + 1) % cmi_params.eval_freq == 0:
                 if use_cmi:
-                    # if do not update inference, there is no need to update inference eval mask
+                    # reset mask evaluation accumulator
                     inference.reset_causal_graph_eval()
+
                     for _ in range(cmi_params.eval_steps):
                         obs_batch, actions_batch, next_obses_batch = \
                             replay_buffer.sample_inference(cmi_params.eval_batch_size, use_part="eval")
+
                         eval_pred_loss = inference.update_mask(obs_batch, actions_batch, next_obses_batch)
                         loss_details["inference_eval"].append(eval_pred_loss)
-                else:
-                    obs_batch, actions_batch, next_obses_batch = \
-                        replay_buffer.sample_inference(cmi_params.eval_batch_size, use_part="eval")
-                    loss_detail = inference.update(obs_batch, actions_batch, next_obses_batch, eval=True)
-                    loss_details["inference_eval"].append(loss_detail)
+
+                    if hasattr(env, "true_adj_matrix"):
+                        learned_adj = inference.get_adjacency().detach().cpu().numpy()
+                        true_adj = env.true_adj_matrix
+
+                        learned_adj_bin = (learned_adj >= inference.CMI_threshold).astype(int)
+                        true_adj_bin = true_adj.astype(int)
+
+                        TP = ((learned_adj_bin == 1) & (true_adj_bin == 1)).sum()
+                        FP = ((learned_adj_bin == 1) & (true_adj_bin == 0)).sum()
+                        FN = ((learned_adj_bin == 0) & (true_adj_bin == 1)).sum()
+                        TN = ((learned_adj_bin == 0) & (true_adj_bin == 0)).sum()
+
+                        precision = TP / (TP + FP + 1e-8)
+                        recall = TP / (TP + FN + 1e-8)
+                        f1 = 2 * precision * recall / (precision + recall + 1e-8)
+                        accuracy = (TP + TN) / (TP + TN + FP + FN + 1e-8)
+
+                        writer.add_scalar("graph_eval/precision", precision, step)
+                        writer.add_scalar("graph_eval/recall", recall, step)
+                        writer.add_scalar("graph_eval/f1", f1, step)
+                        writer.add_scalar("graph_eval/accuracy", accuracy, step)
+
+                        print(f"[Graph Eval] P={precision:.3f} R={recall:.3f} F1={f1:.3f} Acc={accuracy:.3f} N={learned_adj_bin.sum()}")
 
         if policy_gradient_steps > 0 and rl_algo != "random":
             policy.train()
