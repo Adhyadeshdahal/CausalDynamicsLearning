@@ -155,6 +155,26 @@ class ScriptedChemical:
         # a = np.random.multinomial(1, p).argmax()
         # return a
 
+class ScriptedConflict:
+    def __init__(self, env, params):
+        self.env = env
+        self.params = params
+        self.action_dim = params.action_dim
+
+    def reset(self, *args):
+        pass
+
+    def act(self, obs, deterministic=True):
+        return self.act_randomly()
+
+    def act_randomly(self,):
+        return np.random.randint(self.action_dim)
+        # below for collecting dense graph only
+        # p = np.concatenate([[i * 0.5 + 1.0] * 5 for i in range(10)])
+        # p /= p.sum()
+        # a = np.random.multinomial(1, p).argmax()
+        # return a
+
 
 class SingleScriptedPickAndPlace:
     def __init__(self, params):
@@ -349,4 +369,4 @@ def get_scripted_policy(env, params):
     elif env_name == "Chemical":
         return ScriptedChemical(env, params)
     else:
-        raise ValueError("Unknown env_name: {}".format(env_name))
+        return ScriptedConflict(env, params)

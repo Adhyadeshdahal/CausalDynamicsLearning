@@ -6,10 +6,11 @@ import shutil
 import random
 import numpy as np
 
-from robosuite.controllers import load_controller_config
-from robosuite.utils.input_utils import *
+# from robosuite.controllers import load_controller_config
+# from robosuite.utils.input_utils import *
 from env.physical_env import Physical
 from env.chemical_env import Chemical
+from env.conflict_env import ORANEnvironment
 from utils.multiprocessing_env import SubprocVecEnv
 
 
@@ -149,7 +150,7 @@ def update_obs_act_spec(env, params):
     get act_dim and obs_spec from env and add to params
     """
     params.continuous_state = params.continuous_action = params.continuous_factor = \
-        not isinstance(env, (Physical, Chemical))
+        not isinstance(env, (Physical, Chemical,ORANEnvironment))
     if params.encoder_params.encoder_type == "conv":
         params.continuous_state = True
 
@@ -173,30 +174,14 @@ def get_single_env(params, render=False):
     env_params = params.env_params
     env_name = env_params.env_name
     if "Causal" in env_name:
-        causal_env_params = env_params.causal_env_params
-        env = suite.make(env_name=env_params.env_name,
-                         robots=causal_env_params.robots,
-                         controller_configs=load_controller_config(default_controller=causal_env_params.controller_name),
-                         gripper_types=causal_env_params.gripper_types,
-                         has_renderer=render,
-                         has_offscreen_renderer=causal_env_params.use_camera_obs,
-                         use_camera_obs=causal_env_params.use_camera_obs,
-                         camera_names=causal_env_params.camera_names,
-                         camera_heights=causal_env_params.camera_heights,
-                         camera_widths=causal_env_params.camera_widths,
-                         camera_depths=causal_env_params.camera_depths,
-                         ignore_done=False,
-                         control_freq=causal_env_params.control_freq,
-                         horizon=causal_env_params.horizon,
-                         reward_scale=causal_env_params.reward_scale,
-                         num_movable_objects=causal_env_params.num_movable_objects,
-                         num_unmovable_objects=causal_env_params.num_unmovable_objects,
-                         num_random_objects=causal_env_params.num_random_objects,
-                         num_markers=causal_env_params.num_markers)
+        raise NotImplementedError("Deleted this no use")
     elif env_name == "Physical":
         env = Physical(params)
     elif env_name == "Chemical":
         env = Chemical(params)
+    elif env_name == "Conflict":
+        from env.conflict_env import ORANEnvironment
+        env = ORANEnvironment(num_bins=env_params.conflict_env_params.num_bins, max_steps=env_params.conflict_env_params.max_steps)
     else:
         raise ValueError("Unknown env_name: {}".format(env_name))
 
