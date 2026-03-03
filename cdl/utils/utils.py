@@ -182,6 +182,9 @@ def get_single_env(params, render=False):
     elif env_name == "Conflict":
         from env.conflict_env import ORANEnvironment
         env = ORANEnvironment(num_bins=env_params.conflict_env_params.num_bins, max_steps=env_params.conflict_env_params.max_steps)
+    elif env_name == "Conflict2":
+        from env.conflict_env_param_param import ORANEnvironment
+        env = ORANEnvironment(num_bins=env_params.conflict2_env_params.num_bins, max_steps=env_params.conflict2_env_params.max_steps)
     else:
         raise ValueError("Unknown env_name: {}".format(env_name))
 

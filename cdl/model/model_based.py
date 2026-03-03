@@ -14,7 +14,7 @@ from utils.utils import to_numpy, preprocess_obs, postprocess_obs
 class ActionDistribution:
     def __init__(self, params):
         self.action_dim = action_dim = params.action_dim
-        self.continuous_action = params.continuous_state
+        self.continuous_action = params.continuous_action
 
         model_based_params = params.policy_params.model_based_params
         self.n_top_candidate = model_based_params.n_top_candidate
@@ -422,14 +422,14 @@ class ModelBased(nn.Module):
             action_noise = np.random.normal(scale=action_noise, size=self.action_dim)
             action = np.clip(action + action_noise, self.action_low, self.action_high)
 
-        if self.continuous_state:
-            eef_pos = obs["robot0_eef_pos"]
-            global_low, global_high = np.array([-0.35, -0.45, 0.82]), np.array([0.35, 0.45, 1.0])
-            controller_scale = 0.05
-            action[:3] = np.clip(action[:3],
-                                 (global_low - eef_pos) / controller_scale,
-                                 (global_high - eef_pos) / controller_scale)
-            action = np.clip(action, self.action_low, self.action_high)
+        # if self.continuous_state:
+        #     eef_pos = obs["robot0_eef_pos"]
+        #     global_low, global_high = np.array([-0.35, -0.45, 0.82]), np.array([0.35, 0.45, 1.0])
+        #     controller_scale = 0.05
+        #     action[:3] = np.clip(action[:3],
+        #                          (global_low - eef_pos) / controller_scale,
+        #                          (global_high - eef_pos) / controller_scale)
+        #     action = np.clip(action, self.action_low, self.action_high)
 
         return action
 

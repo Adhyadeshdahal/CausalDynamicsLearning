@@ -278,6 +278,7 @@ class Inference(nn.Module):
         :param next_obses: ({obs_i_key: (bs, num_pred_steps, obs_i_shape)}
         :return: {"loss_name": loss_value}
         """
+        # eval = not self.training
         features = self.encoder(obses)
         next_features = self.encoder(next_obses)
         pred_next_dist = self.forward_with_feature(features, actions)
