@@ -70,7 +70,7 @@ class ORANEnvironment(gym.Env):
 
         # ----- Parameters -----
         self.params = [
-            Param((0, 3)) for i in range(7)
+            Param((0, 300)) if i < 2 else Param((0, 3)) for i in range(7)
         ]
 
         # ----- KPIs -----
@@ -184,7 +184,10 @@ class ORANEnvironment(gym.Env):
     def _get_state(self):
         state = {}
         for i, val in enumerate(self.prev_params):
-            state[f"param{i}"] = np.array([val], dtype=np.float32)
+            param = self.params[i]
+            low,high = param.get_threshold()
+            normalized_val = (val - low) / (high - low)
+            state[f"param{i}"] = np.array([normalized_val], dtype=np.float32)
 
         for i, val in enumerate(self.prev_kpis):
             state[f"kpi{i}"] = np.array([val], dtype=np.float32)
