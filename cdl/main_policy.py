@@ -29,6 +29,7 @@ from env.chemical_env import Chemical
 def train(params):
     device = torch.device("cuda:{}".format(params.cuda_id) if torch.cuda.is_available() else "cpu")
     set_seed_everywhere(params.seed)
+    print("Using device:", device)
 
     params.device = device
     training_params = params.training_params

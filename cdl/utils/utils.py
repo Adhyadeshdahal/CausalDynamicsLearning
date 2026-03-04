@@ -8,6 +8,7 @@ import numpy as np
 
 # from robosuite.controllers import load_controller_config
 # from robosuite.utils.input_utils import *
+from env.QACM import ORANEnvironment2
 from env.physical_env import Physical
 from env.chemical_env import Chemical
 from env.conflict_env import ORANEnvironment
@@ -150,7 +151,7 @@ def update_obs_act_spec(env, params):
     get act_dim and obs_spec from env and add to params
     """
     params.continuous_state = params.continuous_action = params.continuous_factor = \
-        not isinstance(env, (Physical, Chemical,ORANEnvironment))
+        not isinstance(env, (Physical, Chemical,ORANEnvironment, ORANEnvironment2))
     if params.encoder_params.encoder_type == "conv":
         params.continuous_state = True
 
@@ -182,9 +183,8 @@ def get_single_env(params, render=False):
     elif env_name == "Conflict":
         from env.conflict_env import ORANEnvironment
         env = ORANEnvironment(num_bins=env_params.conflict_env_params.num_bins, max_steps=env_params.conflict_env_params.max_steps)
-    elif env_name == "Conflict2":
-        from env.conflict_env_param_param import ORANEnvironment
-        env = ORANEnvironment(num_bins=env_params.conflict2_env_params.num_bins, max_steps=env_params.conflict2_env_params.max_steps)
+    elif env_name == "QACM":
+        env = ORANEnvironment2(num_bins=env_params.QACM_env_params.num_bins, max_steps=env_params.QACM_env_params.max_steps)
     else:
         raise ValueError("Unknown env_name: {}".format(env_name))
 
