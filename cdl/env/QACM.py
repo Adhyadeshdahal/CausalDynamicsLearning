@@ -101,8 +101,8 @@ def update_Kpi1(prev_params, prev_kpis):
     P1 = prev_params[0]
     P2 = safe_exp(prev_params[1])
     
-    # return 80 * exp(-(P1+50) ** 2 / (2 * (P2 ** 2)))
-    return 10 * exp(-(P1+1) ** 2 / (2 * (P2 ** 2)))
+    return 80 * exp(-(P1+50) ** 2 / (2 * (P2 ** 2)))
+    # return 10 * exp(-(P1+1) ** 2 / (2 * (P2 ** 2)))
 
 
 
@@ -111,16 +111,16 @@ def update_Kpi2(prev_params, prev_kpis):
     P3 = prev_params[2]
     P2 = safe_exp(prev_params[1])
 
-    # return 100*exp(-(P1 + P3) ** 2 / (2 * (P2 ** 2)))
-    return 10*exp(-(P1 + P3) ** 2 / (2 * (P2 ** 2)))
+    return 100*exp(-(P1 + P3) ** 2 / (2 * (P2 ** 2)))
+    # return 10*exp(-(P1 + P3) ** 2 / (2 * (P2 ** 2)))
 
 
 
 def update_Kpi3(prev_params, prev_kpis):
     P4 = safe_exp(prev_params[3])
     P1 = prev_params[0]
-    # return 120*exp(-(P1+45) ** 2 / (2 * (P4 ** 2)))
-    return 10*exp(-(P1+0.45) ** 2 / (2 * (P4 ** 2)))
+    return 120*exp(-(P1+45) ** 2 / (2 * (P4 ** 2)))
+    # return 10*exp(-(P1+0.45) ** 2 / (2 * (P4 ** 2)))
 
 
 
@@ -128,24 +128,24 @@ def update_Kpi41(prev_params, prev_kpis):
     P6 = prev_params[5]
     P2 = prev_params[1]
     P5 = safe_exp(prev_params[4])
-    # return 120*exp(-(P6 + P2 - 30) ** 2 / (2 * (P5 ** 2)))
-    return 10*exp(-(P6 + P2-0.3) ** 2 / (2 * (P5 ** 2)))
+    return 120*exp(-(P6 + P2 - 30) ** 2 / (2 * (P5 ** 2)))
+    # return 10*exp(-(P6 + P2-0.3) ** 2 / (2 * (P5 ** 2)))
 
 
 def update_Kpi42(prev_params, prev_kpis):
     P6 = prev_params[5]
     P2 = prev_params[1]
     P5 = safe_exp(prev_params[4])
-    # return 150 * exp(-(P6+P2-50) ** 2 / (2 * (P5 ** 2)))
-    return 10 * exp(-(P6+P2-0.5) ** 2 / (2 * (P5 ** 2)))
+    return 150 * exp(-(P6+P2-50) ** 2 / (2 * (P5 ** 2)))
+    # return 10 * exp(-(P6+P2-0.5) ** 2 / (2 * (P5 ** 2)))
 
 
 def update_Kpi5(prev_params, prev_kpis):
     P7 = safe_exp(prev_params[6])
     P1 = prev_params[0]
     P8 = prev_params[7]
-    # return -35 * exp(-(P8 + P1 -25) ** 2 / (2 * (P7 ** 2)))
-    return -10 * exp(-(P8 + P1 - 0.25) ** 2 / (2 * (P7 ** 2)))
+    return -35 * exp(-(P8 + P1 -25) ** 2 / (2 * (P7 ** 2)))
+    # return -10 * exp(-(P8 + P1 - 0.25) ** 2 / (2 * (P7 ** 2)))
 
 
 class ORANEnvironment2(gym.Env):
@@ -164,11 +164,11 @@ class ORANEnvironment2(gym.Env):
         super().__init__()
 
         setParamFns = [set_param1,set_param2,set_param3,set_param4,set_param5,set_param6,set_param7,set_param8]
-        # ParamThresholds = [(-100,100),(-10,50),(-20,20),(-60,60),(-20,20),(-50,150),(-60,65),(-100,150)]
-        ParamThresholds = [(0,3),(0,3),(0,3),(0,3),(0,3),(0,3),(0,3),(0,3)]
+        ParamThresholds = [(-100,100),(-10,50),(-20,20),(-60,60),(-20,20),(-50,150),(-60,65),(-100,150)]
+        # ParamThresholds = [(0,3),(0,3),(0,3),(0,3),(0,3),(0,3),(0,3),(0,3)]
 
-        # kpi_thresholds = [55, 95, 85, 75, 80, -25]
-        kpi_thresholds = [5, 5, 5, 5, 5, -5]
+        kpi_thresholds = [55, 95, 85, 75, 80, -25]
+        # kpi_thresholds = [5, 5, 5, 5, 5, -5]
 
         direction = [0, 0, 0, 0, 0, 1] # 0 means maximize, 1 means minimize
         updateKPIFns = [update_Kpi1, update_Kpi2, update_Kpi3, update_Kpi41, update_Kpi42, update_Kpi5]
@@ -203,7 +203,7 @@ class ORANEnvironment2(gym.Env):
 
 
         self.weights = [1]*self.num_kpis #need this from poilcy_params.json 
-        self.zeta = 1e1 #need this from policy_params.json
+        self.zeta = 1e2 #need this from policy_params.json
 
         length_state = self.num_params + self.num_kpis
         self.true_adj_matrix = np.zeros((length_state, length_state), dtype=np.float32)

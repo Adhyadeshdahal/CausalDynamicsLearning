@@ -37,7 +37,7 @@
         "load_policy": "",
         "load_replay_buffer": "",
 
-        "total_steps": 25000,
+        "total_steps": 20000,
         "init_steps": 3000,
 
         "collect_env_step": true,
@@ -75,7 +75,7 @@
             "causal_pred_reward_weight": 0.5,
             "pred_diff_reward_weight": 0.5,
             "eval_tau": 0.98,
-            "eval_freq": 100,
+            "eval_freq": 500,
             "eval_steps": 10,
             "eval_batch_size": 256,
             "CMI_threshold": 0.5,
