@@ -210,29 +210,31 @@ def train(params):
                         eval_pred_loss = inference.update_mask(obs_batch, actions_batch, next_obses_batch)
                         loss_details["inference_eval"].append(eval_pred_loss)
 
-                    if hasattr(env, "true_adj_matrix"):
-                        learned_adj = inference.get_adjacency().detach().cpu().numpy()
-                        true_adj = env.true_adj_matrix
+                if hasattr(env, "true_adj_matrix"):
+                    learned_adj = inference.get_adjacency().detach().cpu().numpy()
+                    true_adj = env.true_adj_matrix
+                    learned_threshold = getattr(inference, "CMI_threshold", getattr(inference, "edge_threshold", 0.5))
+                    learned_adj_bin = (learned_adj >= learned_threshold).astype(int)
+                    true_adj_bin = true_adj.astype(int)
 
-                        learned_adj_bin = (learned_adj >= inference.CMI_threshold).astype(int)
-                        true_adj_bin = true_adj.astype(int)
+                    TP = ((learned_adj_bin == 1) & (true_adj_bin == 1)).sum()
+                    FP = ((learned_adj_bin == 1) & (true_adj_bin == 0)).sum()
+                    FN = ((learned_adj_bin == 0) & (true_adj_bin == 1)).sum()
+                    TN = ((learned_adj_bin == 0) & (true_adj_bin == 0)).sum()
 
-                        TP = ((learned_adj_bin == 1) & (true_adj_bin == 1)).sum()
-                        FP = ((learned_adj_bin == 1) & (true_adj_bin == 0)).sum()
-                        FN = ((learned_adj_bin == 0) & (true_adj_bin == 1)).sum()
-                        TN = ((learned_adj_bin == 0) & (true_adj_bin == 0)).sum()
+                    precision = TP / (TP + FP + 1e-8)
+                    recall = TP / (TP + FN + 1e-8)
+                    f1 = 2 * precision * recall / (precision + recall + 1e-8)
+                    accuracy = (TP + TN) / (TP + TN + FP + FN + 1e-8)
 
-                        precision = TP / (TP + FP + 1e-8)
-                        recall = TP / (TP + FN + 1e-8)
-                        f1 = 2 * precision * recall / (precision + recall + 1e-8)
-                        accuracy = (TP + TN) / (TP + TN + FP + FN + 1e-8)
+                    writer.add_scalar("graph_eval/precision", precision, step)
+                    writer.add_scalar("graph_eval/recall", recall, step)
+                    writer.add_scalar("graph_eval/f1", f1, step)
+                    writer.add_scalar("graph_eval/accuracy", accuracy, step)
 
-                        writer.add_scalar("graph_eval/precision", precision, step)
-                        writer.add_scalar("graph_eval/recall", recall, step)
-                        writer.add_scalar("graph_eval/f1", f1, step)
-                        writer.add_scalar("graph_eval/accuracy", accuracy, step)
+                    print(f"[Graph Eval] P={precision:.3f} R={recall:.3f} F1={f1:.3f} Acc={accuracy:.3f} N={learned_adj_bin.sum()}")
 
-                        print(f"[Graph Eval] P={precision:.3f} R={recall:.3f} F1={f1:.3f} Acc={accuracy:.3f} N={learned_adj_bin.sum()}")
+
 
         if policy_gradient_steps > 0 and rl_algo != "random":
             policy.train()
