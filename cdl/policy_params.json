@@ -1,5 +1,5 @@
 {
-    "info": "QACM_cmi_kpi_depends_prevParams_threshold_satisfaction",
+    "info": "QACM_cmi_kpi_depends_prevParams_threshold_satisfaction_kpi=fn(new_params)",
 
     "obs_keys": [
         "param0","param1","param2","param3","param4","param5","param6","param7",
@@ -37,7 +37,7 @@
         "load_policy": "",
         "load_replay_buffer": "",
 
-        "total_steps": 20000,
+        "total_steps": 30000,
         "init_steps": 3000,
 
         "collect_env_step": true,
@@ -61,7 +61,7 @@
     },
 
 "inference_params": {
-        "n_pred_step": 1,
+        "n_pred_step": 2,
         "batch_size": 64,
         "lr": 1e-4,
         "train_prop": 0.9,

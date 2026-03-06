@@ -310,7 +310,7 @@ class ORANEnvironment2(gym.Env):
         # Update KPIs
         new_kpis = []
         for kpi in self.kpis:
-            val = kpi.update_kpi(self.prev_params, self.prev_kpis)
+            val = kpi.update_kpi(new_params, self.prev_kpis)
             new_kpis.append(val)
 
         # reward = self.reward(self.kpis)  # uses kpi.value internally

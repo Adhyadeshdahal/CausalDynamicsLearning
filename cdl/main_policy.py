@@ -24,7 +24,9 @@ from utils.plot import plot_adjacency_intervention_mask
 from utils.scripted_policy import get_scripted_policy, get_is_demo
 
 from env.chemical_env import Chemical
+from env.QACM import ORANEnvironment2
 
+kpi_t = dict()
 
 def train(params):
     device = torch.device("cuda:{}".format(params.cuda_id) if torch.cuda.is_available() else "cpu")
@@ -90,6 +92,7 @@ def train(params):
     writer = SummaryWriter(os.path.join(params.rslts_dir, "tensorboard"))
     model_dir = os.path.join(params.rslts_dir, "trained_models")
     os.makedirs(model_dir, exist_ok=True)
+    
 
     start_step = get_start_step_from_model_loading(params)
     total_steps = training_params.total_steps
@@ -101,6 +104,8 @@ def train(params):
     # init episode variables
     episode_num = 0
     obs = env.reset()
+    kpi_t = {k: obs[k] for k in obs if "kpi" in k.lower()}
+
 
     done = np.zeros(num_env, dtype=bool) if is_vecenv else False
     success = False
@@ -135,6 +140,8 @@ def train(params):
                     episode_num += 1
             elif not is_vecenv and done:
                 obs = env.reset()
+                kpi_t = {k: obs[k] for k in obs if "kpi" in k.lower()}
+
                 if rl_algo == "hippo":
                     policy.reset()
 
@@ -175,7 +182,13 @@ def train(params):
             episode_reward += env_reward if is_task_learning else inference_reward
             episode_step += 1
 
-            # is_train: if the transition is training data or evaluation data for inference_cmi
+            #for the QACM environment the si_t -> sj_t:Violates Assumption 4 of the cdl.
+            if isinstance(env, ORANEnvironment2):
+                kpi_tp1 = {k: next_obs[k] for k in next_obs if "kpi" in k.lower()}
+                for k in kpi_tp1:
+                    next_obs[k] = kpi_t[k]   
+                kpi_t = kpi_tp1
+
             replay_buffer.add(obs, action, env_reward, next_obs, done, is_train, info)
 
             # ppo uses its own buffer
